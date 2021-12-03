@@ -1,0 +1,41 @@
+{
+  "name": "bird_s70",
+  "description": "It's that time again. We're going to remake bird.",
+  "version": "0.0.1",
+  "main": "bird-index.js",
+  "scripts": {
+    "test": "npm i -g forever ; forever start bird-index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Coder-Tavi/BirdMk2_VPS.git"
+  },
+  "keywords": [
+    "discord.js",
+    "discordjs",
+    "djs",
+    "discord",
+    "bot",
+    "discord",
+    "bot",
+    "djsv13"
+  ],
+  "author": "Tavi#0001",
+  "license": "UNLICENSED",
+  "bugs": {
+    "url": "https://github.com/Coder-Tavi/BirdMk2_VPS/issues"
+  },
+  "homepage": "https://github.com/Coder-Tavi/BirdMk2_VPS#readme",
+  "dependencies": {
+    "@discordjs/builders": "^0.9.0",
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "ascii-table": "^0.0.9",
+    "canvas": "^2.8.0",
+    "common-tags": "^1.8.2",
+    "discord-api-types": "^0.25.2",
+    "discord.js": "^13.3.1",
+    "fs": "^0.0.1-security",
+    "node-fetch": "^3.1.0",
+    "util": "^0.12.4"
+  }
+}
