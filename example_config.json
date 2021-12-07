@@ -3,5 +3,7 @@
   "guildId": "123456789012345678",
   "applicationId": "123456789012345678",
   "errorChannel": "123456789012345678",
-  "token": "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890"
+  "apiKeys": ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx", "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"],
+  "token": "abcdefghijklmnopqrstuvwxyz1234567890",
+  "prefix": "!"
 }

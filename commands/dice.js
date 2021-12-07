@@ -25,13 +25,13 @@ module.exports = {
     if(cooldown.has(interaction.user.id)) {
       return interactionEmbed(3, `[ERR-CLD]`, `You must not have an active cooldown`, interaction, client, true);
     } else {
-      const sides = options.get(`sides`);
-      let diceRoll = getRandomNumber(1, 1, sides, false)
-      interactionEmbed(1, `Your dice landed on ${diceRoll}`, ``, interaction, client, false);
+      const sides = options.getInteger(`sides`);
+      let diceRoll = await getRandomNumber(1, 1, sides, false)
+      interaction.editReply({ content: `Your dice landed on ${diceRoll[0]}` });
 
-      cooldown.add(interaction.message.author.id);
+      cooldown.add(interaction.user.id);
       setTimeout(() => {
-        cooldown.delete(interaction.message.author.id);
+        cooldown.delete(interaction.user.id);
       }, 2500);
     }
   },
@@ -46,8 +46,8 @@ module.exports = {
     } else {
       const sides = parseInt(args[0]);
       if(!sides || sides === `NaN`) return messageEmbed(3, `[ERR-ARG]`, `Arg: sides :-: Expected integer, got undefined/NaN`, message, client);
-      let diceRoll = getRandomNumber(1, 1, sides, false);
-      messageEmbed(1, `Your dice landed on ${diceRoll}`, ``, message, client);
+      let diceRoll = await getRandomNumber(1, 1, sides, false);
+      message.reply({ content: `Your dice landed on ${diceRoll[0]}` });
 
       cooldown.add(message.author.id);
       setTimeout(() => {

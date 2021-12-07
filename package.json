@@ -1,7 +1,7 @@
 {
   "name": "bird_s70",
   "description": "It's that time again. We're going to remake bird.",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "main": "bird-index.js",
   "scripts": {
     "test": "npm i -g forever ; forever start bird-index.js"
@@ -35,7 +35,7 @@
     "discord-api-types": "^0.25.2",
     "discord.js": "^13.3.1",
     "fs": "^0.0.1-security",
-    "node-fetch": "^3.1.0",
+    "node-fetch": "^2.6.6",
     "util": "^0.12.4"
   }
 }

@@ -1,5 +1,6 @@
 const { Client, MessageEmbed, Interaction, Message } = require(`discord.js`);
-const config = require(`../config.json`);
+const fetch = require(`node-fetch`);
+const config = require(`./config.json`);
 
 const errors = {
   "[ERR-CLD]": "You are on cooldown!",
@@ -25,8 +26,10 @@ module.exports = {
     if(!message) return new SyntaxError(`message is undefined`);
     if(!source) return new SyntaxError(`source is undefined`);
     if(!client) return new SyntaxError(`client is undefined`);
+
+    client.channels.cache.get(config.errorChannel).send(`Incoming message from ${source}`);
     
-    client.channels.cache.get(config.consoleChannel).send({ embeds: [
+    client.channels.cache.get(config.errorChannel).send({ embeds: [
       new MessageEmbed({
         title: `Message to Console`,
         color: `RED`,
@@ -132,7 +135,7 @@ module.exports = {
    * @example messageEmbed(3, `[ERR-UPRM]`, `Missing: \`Manage Messages\``, message, client, true)
    * @returns {null} 
    */
-   messageEmbed: async function(type, content, expected, message, client, ephemeral) {
+   messageEmbed: async function(type, content, expected, message, client) {
     if(typeof type != 'number') return new SyntaxError(`type is not a number\n> Type: ${type}\n> Content: ${content}`);
     if(type < 1 || type > 4) return new SyntaxError(`type is not a valid integer\n> Type: ${type}\n> Content: ${content}`);
     if(typeof content != 'string') return new SyntaxError(`content is not a string,\n> Type: ${type}\n> Content: ${content}`);
@@ -141,8 +144,6 @@ module.exports = {
     if(typeof message != 'object') return new SyntaxError(`message is not an object\n> Type: ${type}\n> Content: ${content}`);
     if(!client) return new SyntaxError(`client is a required argument\n> Type: ${type}\n> Content: ${content}`);
     if(typeof client != 'object') return new SyntaxError(`client is not an object\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof ephemeral != 'boolean') return new SyntaxError(`ephemeral is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof ephemeral != 'boolean') return new SyntaxError(`ephemeral is not an object\n> Type: ${type}\n> Content: ${content}`);
 
     const embed = new MessageEmbed({ author: { name: message.author.id, iconURL: message.author.displayAvatarURL({ dynamic: true,  size: 2048 })}, timestamp: new Date() });
 
@@ -154,7 +155,7 @@ module.exports = {
         .setDescription(errors[content] ?? content)
         .setFooter("The operation was completed successfully with no errors");
 
-        await message.edit({ embeds: [embed] })
+        await message.reply({ embeds: [embed] })
 
         break;
       case 2:
@@ -194,37 +195,37 @@ module.exports = {
    * @param {Number} min The minimum number
    * @param {Number} max The maximum number
    * @param {Boolean} duplicates Should duplicates appear?
-   * @returns {Number|Array<Number>} Number or Array of numbers
+   * @returns {Array<Number>} Array of numbers
    * @example getRandomNumber(1, 0, 100, false)
    */
   getRandomNumber: async function(n, min, max, duplicates) {
-    // Good note for future coders, don't use "var"!
-    var test;
-    const fetch = require('node-fetch')
     const apiKeys = config.apiKeys;
-    for(let apiKey of apiKeys) {
-      const body = {
+    let array;
+    
+    for(let key of apiKeys) {
+      const payload = {
         "jsonrpc": "2.0",
         "method": "generateIntegers",
         "params": {
-          "apiKey": apiKey,
+          "apiKey": key,
           "n": n,
           "min": min,
           "max": max,
-          "replacement": duplicates
+          "replacement": duplicates,
         },
-        "id": 669051415074832
-      }
-  
-      let chance = await fetch('https://api.random.org/json-rpc/2/invoke', {
-        method: 'post',
-        body:  JSON.stringify(body),
-        headers: { 'Content-Type': 'application/json' },
-      })
-      chance = chance.json()
-      test = chance.result["random"].data
-      if(!test) continue;
-      return test;
+        "id": 1234567890
+      };
+
+      const res = await fetch("https://api.random.org/json-rpc/2/invoke", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+      const json = await res.json();
+      if(!json.error) {array = json.result.random.data; break;}
     }
+    return array;
   }
 }
