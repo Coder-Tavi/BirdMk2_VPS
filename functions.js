@@ -1,15 +1,18 @@
-const { Client, MessageEmbed, Interaction, Message } = require(`discord.js`);
+const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton } = require(`discord.js`);
 const fetch = require(`node-fetch`);
 const config = require(`./config.json`);
 
 const errors = {
-  "[ERR-CLD]": "You are on cooldown!",
-  "[ERR-UPRM]": "You do not have the proper permissions to execute this command.",
-  "[ERR-BPRM]": "I do not have the proper permissions to execute this command.",
-  "[ERR-ARGS]": "You have not supplied the correct parameters. Please check again.",
-  "[ERR-UNK]": "I can't tell why an issue spawned. Please report this to a developer.",
-  "[WARN-NODM]": "Sorry, but all slash commands only work in a server, not DMs.",
-  "[INFO-DEV]": "This command is in development. This should not be expected to work"
+  "[SQL-ERR]": `An error has occurred while trying to execute a MySQL query`,
+  "[ERR-CLD]": `You are on cooldown!`,
+  "[ERR-UPRM]": `You do not have the proper permissions to execute this command`,
+  "[ERR-BPRM]": `I do not have the proper permissions to execute this command`,
+  "[ERR-ARGS]": `You have not supplied the correct parameters. Please check again`,
+  "[ERR-UNK]": `I can't tell why an issue spawned. Please report this to a developer`,
+  "[ERR-MISS]": `I cannot find the information in the system`,
+  "[WARN-NODM]": `Sorry, but all slash commands only work in a server, not DMs`,
+  "[WARN-CMD]": `The requested slash command was not found`,
+  "[INFO-DEV]": `This command is in development. This should not be expected to work`
 }
 
 module.exports = {
@@ -79,7 +82,7 @@ module.exports = {
         .setFooter("The operation was completed successfully with no errors")
         .setTimestamp();
 
-        interaction.editReply({ content: `My magic has worked and the result has been shown!`});
+        await interaction.editReply({ content: `\:unlock: [CMD-OK]`});
         await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
 
         break;
@@ -92,7 +95,7 @@ module.exports = {
         .setFooter("The operation was completed successfully with a minor error")
         .setTimestamp();
 
-        interaction.editReply({ content: `Oops! I couldn't cast my spell properly` });
+        await interaction.editReply({ content: `\:closed_lock_with_key: [CMD-WARN]` });
         await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
 
         break;
@@ -105,7 +108,7 @@ module.exports = {
         .setFooter("The operation failed to complete due to an error")
         .setTimestamp();
 
-        interaction.editReply({ content: `Oh no! My magic backfired! Please let my friends in the support server know what happened or try to fix it on your own` });
+        await interaction.editReply({ content: `\:lock: [CMD-ERROR]` });
         await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
 
         break;
@@ -118,76 +121,61 @@ module.exports = {
         .setFooter("The operation is pending completion")
         .setTimestamp();
 
-        interaction.editReply({ content: `Heyo, my magic gave me a little message to tell you!` });
+        await interaction.editReply({ content: `\:lock_with_ink_pen: [CMD-INFO]` });
         await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
 
         break;
     }
   },
   /**
-   * @description Replies with a MessageEmbed to the Message
-   * @param {Number} type 1- Sucessful, 2- Warning, 3- Error, 4- Information
-   * @param {String} content The information to state
-   * @param {String} expected The expected argument (If applicable)
-   * @param {Message} message The Interaction object for responding
-   * @param {Client} client Client object for logging
-   * @example messageEmbed(1, `Removed ${removed} roles`, ``, message, client, false)
-   * @example messageEmbed(3, `[ERR-UPRM]`, `Missing: \`Manage Messages\``, message, client, true)
-   * @returns {null} 
-   */
-   messageEmbed: async function(type, content, expected, message, client) {
-    if(typeof type != 'number') return new SyntaxError(`type is not a number\n> Type: ${type}\n> Content: ${content}`);
-    if(type < 1 || type > 4) return new SyntaxError(`type is not a valid integer\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof content != 'string') return new SyntaxError(`content is not a string,\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof expected != 'string') return new SyntaxError(`expected is not a string\n> Type: ${type}\n> Content: ${content}`);
-    if(!message) return new SyntaxError(`message is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof message != 'object') return new SyntaxError(`message is not an object\n> Type: ${type}\n> Content: ${content}`);
-    if(!client) return new SyntaxError(`client is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof client != 'object') return new SyntaxError(`client is not an object\n> Type: ${type}\n> Content: ${content}`);
-
-    const embed = new MessageEmbed({ author: { name: message.author.id, iconURL: message.author.displayAvatarURL({ dynamic: true,  size: 2048 })}, timestamp: new Date() });
-
-    switch(type) {
-      case 1:
-        embed
-        .setTitle("Success")
-        .setColor("BLURPLE")
-        .setDescription(errors[content] ?? content)
-        .setFooter("The operation was completed successfully with no errors");
-
-        await message.reply({ embeds: [embed] })
-
-        break;
-      case 2:
-        embed
-        .setTitle("Warning")
-        .setColor("ORANGE")
-        .setFooter("The operation was completed successfully with a minor error")
-
-        await message.reply({ embeds: [embed] })
-
-        break;
-      case 3:
-        embed
-        .setTitle("Error")
-        .setColor("RED")
-        .setDescription(errors[content] + `\n> ${expected}` ?? `I don't understand the error "${content}" but was expecting ${expected}. Please report this to the support server!`)
-        .setFooter("The operation failed to complete due to an error");
-
-        await message.reply({ embeds: [embed] })
-
-        break;
-      case 4:
-        embed
-        .setTitle("Information")
-        .setColor("BLURPLE")
-        .setDescription(errors[content] ?? content)
-        .setFooter("The operation is pending completion");
-
-        await message.reply({ embeds: [embed] })
-
-        break;
+     * Simple function to create a prompt message
+     * @param {Interaction} interaction Interaction object
+     * @param {Number} time Seconds for which the reaction is valid
+     * @param {Array<MessageButton>} validButtons The buttons to place on the message
+     * @param {String} content The content to display, can be blank
+     * @param {Boolean} remove Delete the message?
+     * @example promptMessage(interaction, 15, [button1, button2], `This is a prompt message`, true)
+     * @returns {MessageButton} The button the user clicked
+     */
+   promptMessage: async function (interaction, time, validButtons, content, remove) {
+    if(!interaction) return new SyntaxError(`interaction is a required argument, ${time} ${content} ${ephemeral}`);
+    if(typeof interaction != `object`) return new SyntaxError(`interaction is not an object, ${time} ${content} ${ephemeral}`);
+    if(!time) return new SyntaxError(`time is a required argument, ${content} ${ephemeral}`);
+    if(typeof time != `number`) return new SyntaxError(`time is not a number, ${time} ${content} ${ephemeral}`);
+    if(!validButtons) return new SyntaxError(`validButtons is a required argument, ${time} ${content} ${ephemeral}`);
+    if(typeof validButtons != `object`) return new SyntaxError(`validButtons is not an object, ${time} ${content} ${ephemeral}`);
+    content = content ?? `Please select an option`;
+    
+    // Create a filter
+    const filter = i => {
+      i.deferUpdate();
+      return i.user.id === interaction.user.id;
+    };
+    // We put in the time as seconds, with this it's being transfered to MS
+    time *= 1000;
+    // Add a message action row to the message
+    const row = new MessageActionRow();
+    // Add the button to the reaction
+    row.addComponents(validButtons);
+    // And of course, follow up and await the buttons
+    const message = await interaction.followUp({ content: content, components: [row] })
+    const res = await message
+    .awaitMessageComponent({ filter, componentType: `BUTTON`, time: time, errors: ['time'] })
+    // If there is no message, the variable to nothing
+    .catch(() => { return null; });
+    // Disable the buttons locally
+    for(button of row.components) {
+      button.setDisabled(true);
     }
+    // Disable the buttons for the users
+    await message.edit({ content: res === null ? `\:lock: Cancelled` : content, components: [row] });
+    setTimeout(() => {
+      // If the message has not been deleted and
+      // Is allowed to be deleted and a timeout has not occurred
+      if(!message.deleted && remove && res != null) message.delete();
+    }, 5000);
+    // Return the button
+    return res;
   },
   /**
    * @description Generates a random number between min and max using the random.org API
@@ -227,5 +215,69 @@ module.exports = {
       if(!json.error) {array = json.result.random.data; break;}
     }
     return array;
+  },
+  departments: {
+    "AD": {
+      "CL-1": "Administrative Intern",
+      "CL-2": "Administrative Assistant",
+      "CL-4A": "Assistant Site Director",
+      "CL-5": "Site Director",
+    },
+    "SD": {
+      "CL-1": "Security Trainee",
+      "CL-2": "Security Sergeant",
+      "CL-3A": "Security Lieutenant",
+      "CL-4A": "Assistant Security Director",
+      "CL-5": "Security Director",
+    },
+    "ScD": {
+      "CL-1": "Junior Researcher",
+      "CL-2": "Researcher",
+      "CL-3A": "Senior Researcher",
+      "CL-4A": "Assistant Research Director",
+      "CL-5": "Research Director",
+    },
+    "MTF": {
+      "CL-1": "Task Force Trainee",
+      "CL-2": "Task Force Operative",
+      "CL-3A": "Task Force Sergeant",
+      "CL-3B": "Task Force Lieutenant",
+      "CL-4A": "Task Force Captain",
+      "CL-5": "Director of Task Forces",
+    },
+    "MD": {
+      "CL-1": "Nurse",
+      "CL-2": "Medical Practitioner",
+      "CL-3A": "Senior Practitioner",
+      "CL-4A": "Assistant Medical Director",
+      "CL-4B": "Medical Director"
+    },
+    "E&TS": {
+      "CL-1": "Junior Engineer",
+      "CL-2": "Engineer",
+      "CL-3A": "Senior Engineer",
+      "CL-4A": "Assistant Engineering Director",
+      "CL-5": "Engineering Director"
+    },
+    "EC": {
+      "CL-1": "Junior Committee Member",
+      "CL-2": "Committee Member",
+      "CL-3A": "Senior Committee Member",
+      "CL-4A": "Assistant Committee Liason",
+      "CL-5": "Committee Liason"
+    },
+    "IA": {
+      "CL-1": "Trainee Agent",
+      "CL-2": "Field Agent",
+      "CL-3A": "Senior Field Agent",
+      "CL-4A": "Deputy Regional Intelligence Director",
+      "CL-5": "Regional Intelligence Director",
+    },
+    "JS": {
+      "CL-1": "Janitor"
+    },
+    "CI": {
+      "N/A": "N/A"
+    }
   }
 }

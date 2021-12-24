@@ -1,21 +1,34 @@
 const { Client, Collection } = require(`discord.js`);
 const { REST } = require(`@discordjs/rest`);
 const { stripIndents } = require(`common-tags`);
-const { toConsole, interactionEmbed, messageEmbed } = require(`./functions.js`);
+const { toConsole, interactionEmbed } = require(`./functions.js`);
 const { Routes } = require(`discord-api-types/v9`);
+const EventEmitter = require('events');
 const fs = require(`fs`);
+const mysql = require(`mysql2/promise`);
 const wait = require(`util`).promisify(setTimeout);
 const AsciiTable = require(`ascii-table`);
 const config = require(`./config.json`);
 const rest = new REST({ version: 9 }).setToken(config.token);
 
+// Until the bot is ready, reject anything!
+let ready = false;
+
 // Create a new Discord client
 const client = new Client({
-  partials: [`MESSAGE`, `CHANNEL`, `REACTION`],
   intents: [`GUILDS`,`GUILD_BANS`,`GUILD_INVITES`,`GUILD_MEMBERS`,`GUILD_MESSAGES`,`GUILD_MESSAGE_REACTIONS`]
 });
 const slashCommands = [];
 client.commands = new Collection();
+client.event = new EventEmitter();
+(async () => {
+  client.connection = await mysql.createConnection({
+    host: config.host,
+    user: config.user,
+    password: config.password,
+    database: config.database
+  });
+})();
 
 // Error logging
 process.on(`exit`, async () => {
@@ -36,7 +49,7 @@ process.on(`uncaughtException`, async (err, origin) => {
     > Origin: ${origin}`;
     fs.writeFileSync(`./errors/${Date.now()}_uncaughtException-log.txt`, data);
   } else {
-    toConsole(`An [uncaughtException] has occurred\n\n> ${err}\n> ${origin}`, `bird-index.js 26:11`, client);
+    toConsole(`An [uncaughtException] has occurred\n\n> ${err}\n> ${origin}`, `${__filename.split("/")[__filename.split("/").length - 1]} 38:12`, client);
   }
 });
 process.on(`unhandledRejection`, async (promise) => {
@@ -49,7 +62,7 @@ process.on(`unhandledRejection`, async (promise) => {
     > Promise: ${promise}`;
     fs.writeFileSync(`./errors/${Date.now()}_unhandledRejection-log.txt`, data);
   } else {
-    toConsole(`An [unhandledRejection] has occurred\n\n> ${err}\n> ${origin}`, `bird-index.js 39:12`, client);
+    toConsole(`An [unhandledRejection] has occurred\n\n> ${promise}`, `${__filename.split("/")[__filename.split("/").length - 1]} 52:12`, client);
   }
 });
 process.on(`warning`, async (warning) => {
@@ -64,12 +77,31 @@ process.on(`warning`, async (warning) => {
     > Stack: ${warning.stack}`;
     fs.writeFileSync(`./errors/${Date.now()}_warning-log.txt`, data);
   } else {
-    toConsole(`A [warning] has occurred\n\n>>> Warning:\n${warning.name}\n${warning.message}\n\nStacktrace:\n${warning.stack}`, `bird-index.js 55:12`, client);
+    toConsole(`A [warning] has occurred\n\n>>> Warning:\n${warning.name}\n${warning.message}\n\nStacktrace:\n${warning.stack}`, `${__filename.split("/")[__filename.split("/").length - 1]} 65:12`, client);
   }
 })
+client.event.on(`query`, async (results, trace) => {
+  const channel = client.channels.cache.get(config.errorChannel);
+  const table = new AsciiTable(`Query`);
+  table
+  .setHeading(`Property`, `Value`)
+  .addRow(`Source`, trace ?? `? (No trace given)`)
+  .addRow(`Rows Affected`, results.affectedRows ?? `?`)
+  .addRow(`Field Count`, results.fieldCount ?? `?`)
+  .addRow(`Insert ID`, results.insertId ?? `?`)
+  .addRow(`Server Status`, results.serverStatus ?? `?`)
+  .addRow(`Warning Status`, results.warningStatus ?? `?`)
+  .addRow(`Information`, results.info === `` ? `No information` : results.info)
+  const data = `${JSON.stringify(results[0], null, 2)}\n===\n\n\`\`\`\n${table.toString()}\n\`\`\``;
 
-// So I accidentally don't perform <Whatever>(async => {...})
-// It's not necessary but it can happen
+  if(channel === null) {
+    fs.writeFileSync(`./queries/${Date.now()}_query-log.txt`, data);
+  } else {
+    toConsole(data, `${__filename.split("/")[__filename.split("/").length - 1]} 80:16`, client);
+  }
+});
+
+// Prove that the script is running
 console.log(`[FILE-LOAD] Preparing to register commands`);
 
 // Register commands
@@ -81,14 +113,17 @@ console.log(`[FILE-LOAD] Preparing to register commands`);
 
   for(let file of commands) {
     try {
+      console.log(`[FILE-LOAD] Loading file ${file}`);
       let command = require(`./commands/${file}`);
 
       if(command.name) {
+        console.info(`[FILE-LOAD] Loaded: ${file}`);
         slashCommands.push(command.data.toJSON());
         client.commands.set(command.name, command);
         table.addRow(command.name, `Loaded`);
       }
     } catch(e) {
+      console.log(`[FILE-LOAD] Unloaded: ${file}`);
       table.addRow(file, `Unloaded`);
     }
   }
@@ -101,7 +136,7 @@ console.log(`[FILE-LOAD] Preparing to register commands`);
     console.log(`[APP-REFR] Started refreshing application (/) commands.`);
 
     await rest.put(
-      Routes.applicationCommands(config.applicationId),
+      Routes.applicationGuildCommands(config.applicationId, config.guildId),
       { body: slashCommands }
     );
     
@@ -109,10 +144,11 @@ console.log(`[FILE-LOAD] Preparing to register commands`);
     console.log(`[APP-REFR] Successfully reloaded application (/) commands after ${then - now}ms.`);
     console.log(table.toString());
   } catch(error) {
-    toConsole(`An error has occurred while attempting to refresh application commands.\n\n> ${error}`, `bird-index.js 90:19`, client);
+    toConsole(`An error has occurred while attempting to refresh application commands.\n\n> ${error}`, `${__filename.split("/")[__filename.split("/").length - 1]} 90:19`, client);
     console.info(table.toString());
   }
   console.log(`[FILE-LOAD] All files loaded successfully`);
+  ready = true;
 })();
 
 // Ready event
@@ -130,35 +166,16 @@ client.on(`ready`, async () => {
 
 // When an interaction is sent to us
 client.on(`interactionCreate`, async (interaction) => {
+  if(!ready) return interaction.editReply({ content: `[CMD-ERR] The bot is still starting up! Please be patient` });
   if(!interaction.guild) return interactionEmbed(2, `[WARN-NODM]`, ``, interaction, client, false);
   if(interaction.isCommand()) {
     // Defer to keep the Interaction active
     await interaction.deferReply();
     let cmd = client.commands.get(interaction.commandName);
+    if(!cmd) return interactionEmbed(2, `[WARN-CMD]`, `The command ${interaction.commandName} does not exist in the \`client.commands\` database`, interaction, client, false);
     cmd.run(client, interaction, interaction.options);
-    toConsole(`[CMD-RUN] ${interaction.user} (ID: ${interaction.user.id}) ran the command \`${interaction.commandName}\``, `bird-index.js 118:10`, client);
+    toConsole(`[CMD-RUN] ${interaction.user} (ID: ${interaction.user.id}) ran the command \`${interaction.commandName}\``, `${__filename.split("/")[__filename.split("/").length - 1]} 118:10`, client);
   }
-});
-
-// When a command is run
-client.on(`messageCreate`, async (message) => {
-  let prefix = config.prefix;
-  let args = message.content.slice(prefix.length).trim().split(/ +/g);
-  const cmd = args.shift().toLowerCase();
-
-  // Ignoring statements
-  if(!message.guild) return messageEmbed(2, `[WARN-NODM]`, ``, message, client);
-  if(!message.content.startsWith(prefix)) return;
-  if(message.author.bot) return;
-
-  // Get the command and return if there is none
-  let command = client.commands.get(cmd);
-  if(!command) return;
-  if(command.length === 0) return;
-
-  // Execute the command and log it
-  command.execute(client, message, args);
-  toConsole(`[CMD-EXC] ${message.author} (ID: ${message.author.id}) ran the command \`${command.name}\``, `bird-index.js 139:10`, client);
 });
 
 // Login into the Client

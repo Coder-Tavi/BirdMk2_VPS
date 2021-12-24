@@ -1,5 +1,9 @@
 {
   "README": "This file is an example as to what you should put in your config.json file. You can use this file as a starting point and then modify it to suit your needs. (Also, remove this line so you won't see it again.)",
+  "host": "192.168.1.1",
+  "user": "root",
+  "password": "",
+  "database": "mysql",
   "guildId": "123456789012345678",
   "applicationId": "123456789012345678",
   "errorChannel": "123456789012345678",

@@ -1,12 +1,10 @@
-const { Client, CommandInteraction, CommandInteractionOptionResolver, Message } = require(`discord.js`);
+const { Client, CommandInteraction, CommandInteractionOptionResolver } = require(`discord.js`);
 const { SlashCommandBuilder } = require(`@discordjs/builders`);
-const { interactionEmbed, getRandomNumber, messageEmbed } = require("../functions");
+const { interactionEmbed, getRandomNumber } = require("../functions");
 const cooldown = new Set();
 
 module.exports = {
   name: `coinflip`,
-  description: `Flips a coin`,
-  usage: `coinflip`,
   data: new SlashCommandBuilder()
   .setName(`coinflip`)
   .setDescription(`Flips a coin`),
@@ -25,24 +23,6 @@ module.exports = {
       cooldown.add(interaction.message.author.id);
       setTimeout(() => {
         cooldown.delete(interaction.message.author.id);
-      }, 2500);
-    }
-  },
-  /**
-   * @param {Client} client 
-   * @param {Message} message 
-   * @param {Array<String>} args 
-   */
-  execute: async (client, message, args) => {
-    if(cooldown.has(message.author.id)) {
-      return messageEmbed(3, `[ERR-CLD]`, `You must not have an active cooldown`, message, client);
-    } else {
-      const flip = await getRandomNumber(1, 1, 2, false);
-      message.reply({ content: `Your coin has landed. It's ${flip[0] === 1 ? `heads` : `tails`}!`});
-
-      cooldown.add(message.author.id);
-      setTimeout(() => {
-        cooldown.delete(message.author.id);
       }, 2500);
     }
   }
