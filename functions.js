@@ -1,4 +1,4 @@
-const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton } = require(`discord.js`);
+const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction } = require(`discord.js`);
 const fetch = require(`node-fetch`);
 const config = require(`./config.json`);
 
@@ -128,22 +128,17 @@ module.exports = {
     }
   },
   /**
-     * Simple function to create a prompt message
+     * Sends buttons to a user and awaits the response
      * @param {Interaction} interaction Interaction object
-     * @param {Number} time Seconds for which the reaction is valid
-     * @param {Array<MessageButton>} validButtons The buttons to place on the message
-     * @param {String} content The content to display, can be blank
-     * @param {Boolean} remove Delete the message?
-     * @example promptMessage(interaction, 15, [button1, button2], `This is a prompt message`, true)
-     * @returns {MessageButton} The button the user clicked
+     * @param {Number} time Seconds for which the buttons are valid
+     * @param {Array<MessageButton>} buttons The buttons to place on the message
+     * @param {String|null} content The content to display, can be blank
+     * @param {Boolean} remove Delete the message after the time expires
+     * @example awaitButtons(interaction, 15, [button1, button2], `Select a button`, true);
+     * @returns {MessageButton|null} The button the user clicked or null if no button was clicked
      */
-   promptMessage: async function (interaction, time, validButtons, content, remove) {
-    if(!interaction) return new SyntaxError(`interaction is a required argument, ${time} ${content} ${ephemeral}`);
-    if(typeof interaction != `object`) return new SyntaxError(`interaction is not an object, ${time} ${content} ${ephemeral}`);
-    if(!time) return new SyntaxError(`time is a required argument, ${content} ${ephemeral}`);
-    if(typeof time != `number`) return new SyntaxError(`time is not a number, ${time} ${content} ${ephemeral}`);
-    if(!validButtons) return new SyntaxError(`validButtons is a required argument, ${time} ${content} ${ephemeral}`);
-    if(typeof validButtons != `object`) return new SyntaxError(`validButtons is not an object, ${time} ${content} ${ephemeral}`);
+   awaitButtons: async function (interaction, time, buttons, content, remove) {
+    if(!interaction || !time || !buttons || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> buttons: ${buttons}\n> remove: ${remove}`);
     content = content ?? `Please select an option`;
     
     // Create a filter
@@ -151,30 +146,78 @@ module.exports = {
       i.deferUpdate();
       return i.user.id === interaction.user.id;
     };
-    // We put in the time as seconds, with this it's being transfered to MS
+    // Convert the time to milliseconds
     time *= 1000;
-    // Add a message action row to the message
+    // Create a MessageActionRow and add the buttons
     const row = new MessageActionRow();
-    // Add the button to the reaction
-    row.addComponents(validButtons);
-    // And of course, follow up and await the buttons
+    row.addComponents(buttons);
+    // Send a follow-up message with the buttons and await a response
     const message = await interaction.followUp({ content: content, components: [row] })
     const res = await message
     .awaitMessageComponent({ filter, componentType: `BUTTON`, time: time, errors: ['time'] })
-    // If there is no message, the variable to nothing
     .catch(() => { return null; });
-    // Disable the buttons locally
+    // Disable the buttons on row
     for(button of row.components) {
       button.setDisabled(true);
     }
-    // Disable the buttons for the users
+    // Send the disabled row
     await message.edit({ content: res === null ? `\:lock: Cancelled` : content, components: [row] });
     setTimeout(() => {
-      // If the message has not been deleted and
-      // Is allowed to be deleted and a timeout has not occurred
+      // Delete if it's not already deleted
+      // And we're allowed to delete it
+      // And the message is not null
       if(!message.deleted && remove && res != null) message.delete();
     }, 5000);
-    // Return the button
+    // Return the button (Or null if no response was given)
+    return res;
+  },
+  /**
+   * Send a MessageSelectMenu to a user and awaits the response
+   * @param {Interaction} interaction Interaction object
+   * @param {Number} time Seconds for which the menu is valid
+   * @param {Number[]} values [min, max] The amount of values that can be selected
+   * @param {MessageSelectOptionData|MessageSelectOptionData[]} options The options for the menu
+   * @param {String|null} content The content to display, can be blank
+   * @param {Boolean} remove Delete the message after the time expires
+   * @example awaitMenu(interaction, 15, [menu], `Select an option`, true);
+   * @returns {SelectMenuInteraction|null} The menu the user interacted with or null if nothing was selected
+   */
+  awaitMenu: async function (interaction, time, values, options, content, remove) {
+    // Step 0: Checks
+    if(!interaction || !time || !values || !options || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> values: ${values}\n> options: ${options}\n> remove: ${remove}`);
+    content = content ?? `Please select an option`;
+
+    // Step 1: Setup
+    const filter = i => {
+      i.deferUpdate();
+      return i.user.id === interaction.user.id;
+    };
+    time *= 1000;
+
+    // Step 2: Creation
+    const row = new MessageActionRow();
+    const menu = new MessageSelectMenu({
+      minValues: values[0],
+      maxValues: values[1],
+      customId: `await-menu`
+    });
+    menu.addOptions(options);
+    row.addComponents(menu);
+
+    // Step 3: Execution
+    const message = await interaction.followUp({ content: content, components: [row] })
+    const res = await message
+    .awaitMessageComponent({ filter, componentType: `SELECT_MENU`, time: time, errors: ['time'] })
+    .catch(() => { return null; });
+
+    // Step 4: Processing
+    row.components[0].setDisabled(true);
+    await message.edit({ content: res === null ? `\:lock: Cancelled` : content, components: [row] });
+
+    // Step 5: Cleanup
+    setTimeout(() => {
+      if(!message.deleted && remove && res != null) message.delete();
+    }, 1500);
     return res;
   },
   /**
@@ -216,6 +259,9 @@ module.exports = {
     }
     return array;
   },
+  /**
+   * JSON containing a list of departments and their respective ranks
+   */
   departments: {
     "AD": {
       "CL-1": "Administrative Intern",
@@ -252,7 +298,7 @@ module.exports = {
       "CL-4A": "Assistant Medical Director",
       "CL-4B": "Medical Director"
     },
-    "E&TS": {
+    "ETS": {
       "CL-1": "Junior Engineer",
       "CL-2": "Engineer",
       "CL-3A": "Senior Engineer",

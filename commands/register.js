@@ -1,6 +1,6 @@
 const { Client, CommandInteraction, CommandInteractionOptionResolver } = require(`discord.js`);
 const { SlashCommandBuilder } = require(`@discordjs/builders`);
-const { interactionEmbed, departments } = require("../functions");
+const { interactionEmbed } = require("../functions");
 const cooldown = new Set();
 
 module.exports = {
@@ -142,9 +142,9 @@ module.exports = {
       const subcommand = options.getSubcommand();
       // If a human was submitted
       if(subcommand === `human`) {
+        // If there is no match, return an error
         if(departments[options.getString(`department`)][options.getString(`clearance`)] === undefined) return interactionEmbed(3, `[ERR-MISS]`, `Invalid department and clearance level`, interaction, client, true);
-        const position = `${options.getString(`department`)} ${options.getString(`clearance`)} ${departments[options.getString(`department`)][options.getString(`clearance`)]}`;
-        const result = await client.connection.execute(`insert into Humans(author, name, age, gender, position) values("${options.getUser(`author`).id}", "${options.getString(`name`)}", ${parseInt(options.getInteger(`age`))}, "${options.getString(`gender`)}", "${position}")`)
+        const result = await client.connection.execute(`insert into Humans(author, name, age, gender, position) values("${options.getUser(`author`).id}", "${options.getString(`name`)}", ${parseInt(options.getInteger(`age`))}, "${options.getString(`gender`)}", "${options.getString(`department`)}", "${options.getString(`clearance`)}")`)
         .catch(e => interactionEmbed(3, `[SQL-ERR]`, `[${e.code}] ${e.message}`, interaction, client, false));
         if(!result) return;
         client.event.emit(`query`, result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 124:55`)

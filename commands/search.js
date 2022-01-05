@@ -1,6 +1,6 @@
 const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageEmbed } = require(`discord.js`);
 const { SlashCommandBuilder } = require(`@discordjs/builders`);
-const { interactionEmbed } = require(`../functions.js`);
+const { interactionEmbed, departments } = require(`../functions.js`);
 const cooldown = new Set();
 
 module.exports = {
@@ -58,6 +58,7 @@ module.exports = {
         .catch(e => interactionEmbed(3, `[SQL-ERR]`, `[${e.code}] ${e.message}`, interaction, client, false));
         if(result[0].length === 0) return interactionEmbed(3, `[ERR-MISS]`, `No results found for ${options.getString(`name`)}`, interaction, client, false);
         client.event.emit(`query`, result, `${__filename.split("/")[__filename.split("/").length - 1]} 58:59`);
+        const position = `${result[0][0].department} ${result[0][0].clearance} ${departments[result[0][0].department][result[0][0].clearance]}`;
         interaction.editReply({ content: `[CMD-OK] \:lock:`, embeds: [ new MessageEmbed({
           title: `Information for ${result[0][0].name}`,
           description: `Created by <@!${result[0][0].author}> (${result[0][0].author})`,
@@ -65,7 +66,7 @@ module.exports = {
             { name: `Name`, value: result[0][0].name, inline: false },
             { name: `Age`, value: String(result[0][0].age), inline: false },
             { name: `Gender`, value: result[0][0].gender, inline: false },
-            { name: `Position`, value: result[0][0].position, inline: false }
+            { name: `Position`, value: position, inline: false }
           ],
           footer: {
             text: `ID: ${result[0][0].charId}`
@@ -98,7 +99,8 @@ module.exports = {
           title: `Characters by ${options.getUser(`user`).username} (${options.getUser(`user`).id})`
         });
         for(const human of result[0]) {
-          embed.addField(human.name, `${human.position}\n> Age: ${human.age}\n> Gender: ${human.gender}`)
+          const position = `${human.department} ${human.clearance} ${departments[human.department][human.clearance]}}`;
+          embed.addField(human.name, `${position}\n> Age: ${human.age}\n> Gender: ${human.gender}`)
         }
         const result2 = await client.connection.execute(`select * from Anomalies where author = ?`, [options.getUser(`user`).id])
         .catch(e => interactionEmbed(3, `[SQL-ERR]`, `[${e.code}] ${e.message}`, interaction, client, false));

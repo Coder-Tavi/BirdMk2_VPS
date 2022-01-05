@@ -1,6 +1,6 @@
 const { Client, CommandInteraction, CommandInteractionOptionResolver, MessageButton, MessageEmbed } = require(`discord.js`);
 const { SlashCommandBuilder } = require(`@discordjs/builders`);
-const { interactionEmbed, promptMessage } = require("../functions");
+const { interactionEmbed, awaitButtons } = require("../functions");
 const cooldown = new Set();
 
 module.exports = {
@@ -31,7 +31,7 @@ module.exports = {
         new MessageButton({ customId: `scp`, label: `SCP`, style: `DANGER` })
       ];
 
-      const button = await promptMessage(interaction, 10, buttons, `Please select the type of character you would like to delete`, false);
+      const button = await awaitButtons(interaction, 10, buttons, `Please select the type of character you would like to delete`, false);
       if(button.customId === `human`) {
         const character = await client.connection.query(`SELECT * FROM Humans WHERE charId = ?`, [options.getInteger(`id`)])
         .catch(e => interactionEmbed(3, `[ERR-SQL]`, `[${e.code}] ${e.message}`, interaction, client, true));
@@ -48,7 +48,7 @@ module.exports = {
           ],
           timestamp: new Date()
         })], ephemeral: true });
-        const confirm = await promptMessage(interaction, 10, [new MessageButton({ customId: `yes`, label: `Yes`, style: `DANGER` }), new MessageButton({ customId: `no`, label: `No`, style: `PRIMARY` })], `Are you sure you would like to delete this character?`, true);
+        const confirm = await awaitButtons(interaction, 10, [new MessageButton({ customId: `yes`, label: `Yes`, style: `DANGER` }), new MessageButton({ customId: `no`, label: `No`, style: `PRIMARY` })], `Are you sure you would like to delete this character?`, true);
         if(confirm.customId === `yes`) {
           const result = await client.connection.query(`DELETE FROM Humans WHERE charId = ?`, [options.getInteger(`id`)])
           .catch(e => interactionEmbed(3, `[SQL-ERR]`, `[${e.code}] ${e.message}`, interaction, client, false));
@@ -72,7 +72,7 @@ module.exports = {
           ],
           timestamp: new Date()
         })], ephemeral: true });
-        const confirm = await promptMessage(interaction, 10, [new MessageButton({ customId: `yes`, label: `Yes`, style: `DANGER` }), new MessageButton({ customId: `no`, label: `No`, style: `PRIMARY` })], `Are you sure you would like to delete this character?`, true);
+        const confirm = await awaitButtons(interaction, 10, [new MessageButton({ customId: `yes`, label: `Yes`, style: `DANGER` }), new MessageButton({ customId: `no`, label: `No`, style: `PRIMARY` })], `Are you sure you would like to delete this character?`, true);
         if(confirm.customId === `yes`) {
           const result = await client.connection.query(`DELETE FROM Anomalies WHERE charId = ?`, [options.getInteger(`id`)])
           .catch(e => interactionEmbed(3, `[SQL-ERR]`, `[${e.code}] ${e.message}`, interaction, client, false));
