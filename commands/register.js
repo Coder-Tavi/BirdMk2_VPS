@@ -1,6 +1,6 @@
 const { Client, CommandInteraction, CommandInteractionOptionResolver } = require(`discord.js`);
 const { SlashCommandBuilder } = require(`@discordjs/builders`);
-const { interactionEmbed } = require("../functions");
+const { interactionEmbed, departments } = require("../functions");
 const cooldown = new Set();
 
 module.exports = {
