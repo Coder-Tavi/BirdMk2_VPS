@@ -161,6 +161,17 @@ client.on(`ready`, async () => {
   setInterval(async () => {
     await client.guilds.cache.first().members.fetch();
     client.user.setActivity({ name: `over the ${client.guilds.cache.first().members.cache.size} personnel of ${client.guilds.cache.first().name.split(" ")[0]}`, type: `WATCHING` });
+
+    if(client.connection._closing === true) {
+      toConsole(`The connection has been closed or is closing. The connection will be ended and a new one will be opened!`, `${__filename.split("/")[__filename.split("/").length - 1]} 166:16`, client);
+      await client.connection.end();
+      client.connection = await mysql.createConnection({
+        host: config.host,
+        user: config.user,
+        password: config.password,
+        database: config.database
+      });
+    }
   }, 20000)
 });
 
