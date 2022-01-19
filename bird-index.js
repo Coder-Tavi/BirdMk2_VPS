@@ -169,7 +169,7 @@ client.on(`ready`, async () => {
       password: config.password,
       database: config.database
     });
-  }, 20000);
+  }, 45000);
 });
 
 // When an interaction is sent to us
