@@ -26,8 +26,7 @@ client.event = new EventEmitter();
     host: config.host,
     user: config.user,
     password: config.password,
-    database: config.database,
-    enableKeepAlive: true
+    database: config.database
   });
 })();
 
@@ -161,8 +160,16 @@ client.on(`ready`, async () => {
 
   setInterval(async () => {
     await client.guilds.cache.first().members.fetch();
+    // Let queries finish before closing
+    await client.connection.end();
     client.user.setActivity({ name: `over the ${client.guilds.cache.first().members.cache.size} personnel of ${client.guilds.cache.first().name.split(" ")[0]}`, type: `WATCHING` });
-  }, 20000)
+    client.connection = await mysql.createConnection({
+      host: config.host,
+      user: config.user,
+      password: config.password,
+      database: config.database
+    });
+  }, 20000);
 });
 
 // When an interaction is sent to us
