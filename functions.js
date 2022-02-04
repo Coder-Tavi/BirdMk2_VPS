@@ -1,19 +1,20 @@
-const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction } = require(`discord.js`);
-const fetch = require(`node-fetch`);
-const config = require(`./config.json`);
+// eslint-disable-next-line no-unused-vars
+const { Client, MessageEmbed, Interaction, MessageActionRow, MessageButton, MessageSelectMenu, MessageSelectOptionData, SelectMenuInteraction } = require("discord.js");
+const fetch = require("node-fetch");
+const config = require("./config.json");
 
 const errors = {
-  "[SQL-ERR]": `An error has occurred while trying to execute a MySQL query`,
-  "[ERR-CLD]": `You are on cooldown!`,
-  "[ERR-UPRM]": `You do not have the proper permissions to execute this command`,
-  "[ERR-BPRM]": `I do not have the proper permissions to execute this command`,
-  "[ERR-ARGS]": `You have not supplied the correct parameters. Please check again`,
-  "[ERR-UNK]": `I can't tell why an issue spawned. Please report this to a developer`,
-  "[ERR-MISS]": `I cannot find the information in the system`,
-  "[WARN-NODM]": `Sorry, but all slash commands only work in a server, not DMs`,
-  "[WARN-CMD]": `The requested slash command was not found`,
-  "[INFO-DEV]": `This command is in development. This should not be expected to work`
-}
+  "[SQL-ERR]": "An error has occurred while trying to execute a MySQL query",
+  "[ERR-CLD]": "You are on cooldown!",
+  "[ERR-UPRM]": "You do not have the proper permissions to execute this command",
+  "[ERR-BPRM]": "I do not have the proper permissions to execute this command",
+  "[ERR-ARGS]": "You have not supplied the correct parameters. Please check again",
+  "[ERR-UNK]": "I can't tell why an issue spawned. Please report this to a developer",
+  "[ERR-MISS]": "I cannot find the information in the system",
+  "[WARN-NODM]": "Sorry, but all slash commands only work in a server, not DMs",
+  "[WARN-CMD]": "The requested slash command was not found",
+  "[INFO-DEV]": "This command is in development. This should not be expected to work"
+};
 
 module.exports = {
   /**
@@ -26,16 +27,16 @@ module.exports = {
    * @example toConsole(`Published a ban`, `ban.js 14:35`, client);
    */
   toConsole: async (message, source, client) => {
-    if(!message) return new SyntaxError(`message is undefined`);
-    if(!source) return new SyntaxError(`source is undefined`);
-    if(!client) return new SyntaxError(`client is undefined`);
+    if(!message) return new SyntaxError("message is undefined");
+    if(!source) return new SyntaxError("source is undefined");
+    if(!client) return new SyntaxError("client is undefined");
 
     client.channels.cache.get(config.errorChannel).send(`Incoming message from ${source}`);
     
     client.channels.cache.get(config.errorChannel).send({ embeds: [
       new MessageEmbed({
-        title: `Message to Console`,
-        color: `RED`,
+        title: "Message to Console",
+        color: "RED",
         description: `${message}`,
         footer: {
           text: `Source: ${source}`
@@ -58,73 +59,77 @@ module.exports = {
    * @example interactionEmbed(3, `[ERR-UPRM]`, `Missing: \`Manage Messages\``, interaction, client, true)
    * @returns {null} 
    */
-   interactionEmbed: async function(type, content, expected, interaction, client, ephemeral) {
-    if(typeof type != 'number') return new SyntaxError(`type is not a number\n> Type: ${type}\n> Content: ${content}`);
+  interactionEmbed: async function(type, content, expected, interaction, client, ephemeral) {
+    if(typeof type != "number") return new SyntaxError(`type is not a number\n> Type: ${type}\n> Content: ${content}`);
     if(type < 1 || type > 4) return new SyntaxError(`type is not a valid integer\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof content != 'string') return new SyntaxError(`content is not a string,\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof expected != 'string') return new SyntaxError(`expected is not a string\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof content != "string") return new SyntaxError(`content is not a string,\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof expected != "string") return new SyntaxError(`expected is not a string\n> Type: ${type}\n> Content: ${content}`);
     if(!interaction) return new SyntaxError(`interaction is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof interaction != 'object') return new SyntaxError(`interaction is not an object\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof interaction != "object") return new SyntaxError(`interaction is not an object\n> Type: ${type}\n> Content: ${content}`);
     if(!client) return new SyntaxError(`client is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof client != 'object') return new SyntaxError(`client is not an object\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof ephemeral != 'boolean') return new SyntaxError(`ephemeral is a required argument\n> Type: ${type}\n> Content: ${content}`);
-    if(typeof ephemeral != 'boolean') return new SyntaxError(`ephemeral is not an object\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof client != "object") return new SyntaxError(`client is not an object\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof ephemeral != "boolean") return new SyntaxError(`ephemeral is a required argument\n> Type: ${type}\n> Content: ${content}`);
+    if(typeof ephemeral != "boolean") return new SyntaxError(`ephemeral is not an object\n> Type: ${type}\n> Content: ${content}`);
 
     const embed = new MessageEmbed();
 
     switch(type) {
-      case 1:
-        embed
+    case 1:
+      embed
         .setTitle("Success")
-        .setAuthor(interaction.user.username, interaction.user.avatarURL({ dynamic: true, size: 4096 }))
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
         .setDescription(errors[content] ?? content)
-        .setFooter("The operation was completed successfully with no errors")
+        .setFooter({ text: "The operation was completed successfully with no errors" })
         .setTimestamp();
 
-        await interaction.editReply({ content: `\:unlock: [CMD-OK]`});
-        await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
+      // eslint-disable-next-line no-useless-escape
+      await interaction.editReply({ content: "\:unlock: [CMD-OK]"});
+      await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
 
-        break;
-      case 2:
-        embed
+      break;
+    case 2:
+      embed
         .setTitle("Warning")
-        .setAuthor(interaction.user.username, interaction.user.avatarURL({ dynamic: true, size: 4096 }))
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("ORANGE")
         .setDescription(errors[content] + `\n> ${expected}` ?? content)
-        .setFooter("The operation was completed successfully with a minor error")
+        .setFooter({ text: "The operation was completed successfully with a minor error" })
         .setTimestamp();
 
-        await interaction.editReply({ content: `\:closed_lock_with_key: [CMD-WARN]` });
-        await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
+      // eslint-disable-next-line no-useless-escape
+      await interaction.editReply({ content: "\:closed_lock_with_key: [CMD-WARN]" });
+      await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
 
-        break;
-      case 3:
-        embed
+      break;
+    case 3:
+      embed
         .setTitle("Error")
-        .setAuthor(interaction.user.username, interaction.user.avatarURL({ dynamic: true, size: 4096 }))
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("RED")
         .setDescription(errors[content] + `\n> ${expected}` ?? `I don't understand the error "${content}" but was expecting ${expected}. Please report this to the support server!`)
-        .setFooter("The operation failed to complete due to an error")
+        .setFooter({ text: "The operation failed to complete due to an error" })
         .setTimestamp();
 
-        await interaction.editReply({ content: `\:lock: [CMD-ERROR]` });
-        await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
+      // eslint-disable-next-line no-useless-escape
+      await interaction.editReply({ content: "\:lock: [CMD-ERROR]" });
+      await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
 
-        break;
-      case 4:
-        embed
+      break;
+    case 4:
+      embed
         .setTitle("Information")
-        .setAuthor(interaction.user.username, interaction.user.avatarURL({ dynamic: true, size: 4096 }))
+        .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
         .setDescription(errors[content] ?? content)
-        .setFooter("The operation is pending completion")
+        .setFooter({ text: "The operation is pending completion" })
         .setTimestamp();
 
-        await interaction.editReply({ content: `\:lock_with_ink_pen: [CMD-INFO]` });
-        await interaction.followUp({ embeds: [embed], ephemeral: ephemeral })
+      // eslint-disable-next-line no-useless-escape
+      await interaction.editReply({ content: "\:lock_with_ink_pen: [CMD-INFO]" });
+      await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
 
-        break;
+      break;
     }
   },
   /**
@@ -137,9 +142,9 @@ module.exports = {
      * @example awaitButtons(interaction, 15, [button1, button2], `Select a button`, true);
      * @returns {MessageButton|null} The button the user clicked or null if no button was clicked
      */
-   awaitButtons: async function (interaction, time, buttons, content, remove) {
+  awaitButtons: async function (interaction, time, buttons, content, remove) {
     if(!interaction || !time || !buttons || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> buttons: ${buttons}\n> remove: ${remove}`);
-    content = content ?? `Please select an option`;
+    content = content ?? "Please select an option";
     
     // Create a filter
     const filter = i => {
@@ -152,16 +157,17 @@ module.exports = {
     const row = new MessageActionRow();
     row.addComponents(buttons);
     // Send a follow-up message with the buttons and await a response
-    const message = await interaction.followUp({ content: content, components: [row] })
+    const message = await interaction.followUp({ content: content, components: [row] });
     const res = await message
-    .awaitMessageComponent({ filter, componentType: `BUTTON`, time: time, errors: ['time'] })
-    .catch(() => { return null; });
+      .awaitMessageComponent({ filter, componentType: "BUTTON", time: time, errors: ["time"] })
+      .catch(() => { return null; });
     // Disable the buttons on row
-    for(button of row.components) {
+    for(const button of row.components) {
       button.setDisabled(true);
     }
     // Send the disabled row
-    await message.edit({ content: res === null ? `\:lock: Cancelled` : content, components: [row] });
+    // eslint-disable-next-line no-useless-escape
+    await message.edit({ content: res === null ? "\:lock: Cancelled" : content, components: [row] });
     setTimeout(() => {
       // Delete if it's not already deleted
       // And we're allowed to delete it
@@ -185,7 +191,7 @@ module.exports = {
   awaitMenu: async function (interaction, time, values, options, content, remove) {
     // Step 0: Checks
     if(!interaction || !time || !values || !options || remove === null) return new SyntaxError(`One of the following values is not fulfilled:\n> interaction: ${interaction}\n> time: ${time}\n> values: ${values}\n> options: ${options}\n> remove: ${remove}`);
-    content = content ?? `Please select an option`;
+    content = content ?? "Please select an option";
 
     // Step 1: Setup
     const filter = i => {
@@ -199,20 +205,21 @@ module.exports = {
     const menu = new MessageSelectMenu({
       minValues: values[0],
       maxValues: values[1],
-      customId: `await-menu`
+      customId: "await-menu"
     });
     menu.addOptions(options);
     row.addComponents(menu);
 
     // Step 3: Execution
-    const message = await interaction.followUp({ content: content, components: [row] })
+    const message = await interaction.followUp({ content: content, components: [row] });
     const res = await message
-    .awaitMessageComponent({ filter, componentType: `SELECT_MENU`, time: time, errors: ['time'] })
-    .catch(() => { return null; });
+      .awaitMessageComponent({ filter, componentType: "SELECT_MENU", time: time, errors: ["time"] })
+      .catch(() => { return null; });
 
     // Step 4: Processing
     row.components[0].setDisabled(true);
-    await message.edit({ content: res === null ? `\:lock: Cancelled` : content, components: [row] });
+    // eslint-disable-next-line no-useless-escape
+    await message.edit({ content: res === null ? "\:lock: Cancelled" : content, components: [row] });
 
     // Step 5: Cleanup
     setTimeout(() => {
@@ -326,4 +333,4 @@ module.exports = {
       "N/A": "N/A"
     }
   }
-}
+};
