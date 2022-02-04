@@ -1,0 +1,22 @@
+name: Eslint Validation
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependancies
+        run: |
+          npm install
+      - name: Validate using ESLint
+        run: |
+          npx eslint ./
