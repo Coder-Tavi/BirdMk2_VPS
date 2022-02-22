@@ -39,6 +39,7 @@ process.on("exit", async () => {
   fs.writeFileSync(`./errors/${Date.now()}_exit-log.txt`, data);
 });
 process.on("uncaughtException", async (err, origin) => {
+  if(!ready) return process.exit(2319);
   const channel = client.channels.cache.get(config.errorChannel);
   if(channel === null) {
     const data = stripIndents`An error has occurred within the code and the process is still running. Below contains some information regarding the issue. [uncaughtException]
@@ -53,6 +54,7 @@ process.on("uncaughtException", async (err, origin) => {
   }
 });
 process.on("unhandledRejection", async (promise) => {
+  if(!ready) return process.exit(2319);
   const channel = client.channels.cache.get(config.errorChannel);
   if(channel === null) {
     const data = stripIndents`An error has occurred within the code and the process is still running. Below contains some information regarding the issue. [unhandledRejection]
