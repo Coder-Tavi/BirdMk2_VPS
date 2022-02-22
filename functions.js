@@ -31,9 +31,9 @@ module.exports = {
     if(!source) return new SyntaxError("source is undefined");
     if(!client) return new SyntaxError("client is undefined");
 
-    client.channels.cache.get(config.errorChannel).send(`Incoming message from ${source}`);
+    client.channels.cache.get(config["discord"].errorChannel).send(`Incoming message from ${source}`);
     
-    client.channels.cache.get(config.errorChannel).send({ embeds: [
+    client.channels.cache.get(config["discord"].errorChannel).send({ embeds: [
       new MessageEmbed({
         title: "Message to Console",
         color: "RED",
@@ -79,56 +79,56 @@ module.exports = {
         .setTitle("Success")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
-        .setDescription(errors[content] ?? content)
+        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with no errors" })
         .setTimestamp();
-
+  
       // eslint-disable-next-line no-useless-escape
       await interaction.editReply({ content: "\:unlock: [CMD-OK]"});
       await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
-
+  
       break;
     case 2:
       embed
         .setTitle("Warning")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("ORANGE")
-        .setDescription(errors[content] + `\n> ${expected}` ?? content)
+        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation was completed successfully with a minor error" })
         .setTimestamp();
-
+  
       // eslint-disable-next-line no-useless-escape
       await interaction.editReply({ content: "\:closed_lock_with_key: [CMD-WARN]" });
       await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
-
+  
       break;
     case 3:
       embed
         .setTitle("Error")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("RED")
-        .setDescription(errors[content] + `\n> ${expected}` ?? `I don't understand the error "${content}" but was expecting ${expected}. Please report this to the support server!`)
+        .setDescription(!errors[content] ? `I don't understand the error "${content}" but was expecting ${expected}. Please report this to the support server!` : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation failed to complete due to an error" })
         .setTimestamp();
-
+  
       // eslint-disable-next-line no-useless-escape
       await interaction.editReply({ content: "\:lock: [CMD-ERROR]" });
       await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
-
+  
       break;
     case 4:
       embed
         .setTitle("Information")
         .setAuthor({ name: interaction.user.username, iconURL: interaction.user.avatarURL({ dynamic: true, size: 4096 }) })
         .setColor("BLURPLE")
-        .setDescription(errors[content] ?? content)
+        .setDescription(!errors[content] ? content : `${errors[content]}\n> ${expected}`)
         .setFooter({ text: "The operation is pending completion" })
         .setTimestamp();
-
+  
       // eslint-disable-next-line no-useless-escape
       await interaction.editReply({ content: "\:lock_with_ink_pen: [CMD-INFO]" });
       await interaction.followUp({ embeds: [embed], ephemeral: ephemeral });
-
+  
       break;
     }
   },
@@ -237,7 +237,7 @@ module.exports = {
    * @example getRandomNumber(1, 0, 100, false)
    */
   getRandomNumber: async function(n, min, max, duplicates) {
-    const apiKeys = config.apiKeys;
+    const apiKeys = config["misc"].apiKeys;
     let array;
     
     for(let key of apiKeys) {

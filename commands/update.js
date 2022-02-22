@@ -43,7 +43,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Humans set name = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a human with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 42:57`);
           await m.delete();
@@ -53,7 +52,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Humans set age = ${m.first().content} where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a human with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 52:57`);
           await m.delete();
@@ -63,7 +61,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Humans set gender = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a human with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 62:57`);
           await m.delete();
@@ -122,7 +119,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Anomalies set id = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a SCP with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 122:57`);
           await m.delete();
@@ -132,7 +128,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Anomalies set contaiment_class = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a SCP with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 132:57`);
           await m.delete();
@@ -142,7 +137,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Anomalies set threat_level = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a SCP with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 142:57`);
           await m.delete();
@@ -152,7 +146,6 @@ module.exports = {
           if(m.stack) return interaction.editReply({ content: ":x: You took too long to respond." });
           const result = await client.connection.execute(`update Anomalies set name = "${m.first().content}" where charId = ${options.getInteger("id")}`)
             .catch(e => interactionEmbed(3, "[ERR-SQL]", `[${e.code}] ${e.message}`, interaction, client, true));
-          console.log(result);
           if(!result) return interactionEmbed(3, "[ERR-MISS]", `I did not find a SCP with the character ID of ${options.getInteger("id")}`, interaction, client, true);
           client.event.emit("query", result[0], `${__filename.split("/")[__filename.split("/").length - 1]} 152:57`);
           await m.delete();
