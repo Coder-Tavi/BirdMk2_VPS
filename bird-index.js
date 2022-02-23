@@ -31,15 +31,16 @@ client.event = new EventEmitter();
 })();
 
 // Error logging
-process.on("exit", async () => {
+process.on("exit", async (code) => {
   const data = stripIndents`An error has occurred within the code and the process has been killed. Below contains some information regarding the issue. Node.js doesn't provide any further data with the [exit] event so this is all generated at the time the event was logged through functions
   
+  > Code: ${code}
   > Time of incident: ${Date.now()}
   > Date: ${new Date().toUTCString()}`;
   fs.writeFileSync(`./errors/${Date.now()}_exit-log.txt`, data);
 });
 process.on("uncaughtException", async (err, origin) => {
-  if(!ready) return process.exit(2319);
+  if(!ready) return process.exit(8);
   const channel = client.channels.cache.get(config.errorChannel);
   if(channel === null) {
     const data = stripIndents`An error has occurred within the code and the process is still running. Below contains some information regarding the issue. [uncaughtException]
@@ -54,7 +55,7 @@ process.on("uncaughtException", async (err, origin) => {
   }
 });
 process.on("unhandledRejection", async (promise) => {
-  if(!ready) return process.exit(2319);
+  if(!ready) return process.exit(8);
   const channel = client.channels.cache.get(config.errorChannel);
   if(channel === null) {
     const data = stripIndents`An error has occurred within the code and the process is still running. Below contains some information regarding the issue. [unhandledRejection]

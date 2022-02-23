@@ -154,7 +154,8 @@ module.exports = {
       await ticket.edit({ topic: "Staff member handling this ticket: None", permissionOverwrites: overwrites });
       interactionEmbed(1, "Successfully unclaimed the ticket", "", interaction, client, true);
     } else if(subcommand === "close") {
-      if((!interaction.member.roles.cache.find(r => config.discord["ticketManagers"].includes(r.id)) && ticket.topic.split("<@!")[1].replace(">", "") != interaction.user.id) || ticket.name.split("-")[1] != interaction.user.id) return interactionEmbed(3, "[ERR-UPRM]", "You are not authorized to manage the selected ticket", interaction, client, true);
+      // If the user is not a ticket manager OR they have not claimed the ticket, reject the command
+      if(!interaction.member.roles.cache.find(r => config.discord["ticketManagers"].includes(r.id)) && ticket.topic.split("<@!")[1].replace(">", "") != interaction.user.id && ticket.name.split("-")[1] != interaction.user.id) return interactionEmbed(3, "[ERR-UPRM]", "You are not authorized to manage the selected ticket", interaction, client, true);
       // Check if the ticket is truly a ticket and not another channel
       if(!ticket.name.startsWith("ticket-")) return interactionEmbed(3, "[ERR-ARGS]", "Arg: user :-: Expected open ticket with user, got undefined or invalid channel");
 
